@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.venv/
+
+# Secret files
+.env
+
+# Node modules
+node_modules/
+
+# VS Code settings
+.vscode/

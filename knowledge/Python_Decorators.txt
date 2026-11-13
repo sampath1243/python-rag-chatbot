@@ -1,0 +1,295 @@
+Python
+DECORATORS
+
+
+
+What You Will LearnSectionWhat is a Decorator?Section 1Function Decorators (from scratch)Section 2The @decorator SyntaxSection 3Decorators with ArgumentsSection 4Real-World Use CasesSection 5Leveled Practice QuestionsFinal Section
+
+   Prerequisite Knowledge
+Before studying decorators, make sure you are comfortable with: (1) Defining functions with def, (2) Passing functions as arguments (functional references), (3) Returning functions from functions, (4) *args and **kwargs.
+
+
+A decorator is a function that takes another function as input, adds some extra behaviour to it, and returns a new (enhanced) function - WITHOUT changing the original function's code.
+
+
+ •   One-line Definition
+decorator = a wrapper function that modifies or extends another function's behaviour transparently.
+
+The Problem Decorators Solve	
+Imagine you want to add a log message every time a function is called. Without decorators, you would have to edit every single function. With decorators, you write the logging logic ONCE and attach it to any function you want.
+
+Mental Model
+Your Original FunctionPassed into DecoratorDecorator Adds Behaviour  New Enhanced Function Returned????
+
+Real-World Analogy	
+Think of a decorator like a coffee cup sleeve. The coffee (your function) stays exactly the same inside. The sleeve (decorator) wraps around it to add new properties - insulation, branding, labels - without changing the coffee itself.
+
+
+?   Why Decorators Matter
+1. DRY Principle - Write extra behaviour once, apply it everywhere.
+2. Clean Code - Keep functions focused on their single task.
+3. Non-invasive - Enhance functions without touching their internals.
+4. Used everywhere - Flask routes, Django views, pytest, logging, auth...
+
+
+Before using the fancy @syntax, let's build a decorator manually step by step. This way you will truly understand what is happening under the hood.
+
+
+Step 1 - Functions Are Objects	
+In Python, functions are first-class objects. You can store them in variables and pass them to other functions.
+Functions stored in variables:
+
+
+Step 2 - A Function Inside a Function (Closure)	
+A function can be defined inside another function. The inner function can access variables from the outer function's scope - this is called a closure.
+Inner function example:
+
+
+
+
+Step 3 - Returning a Function	
+A function can return another function as its result. This is the heart of how decorators work.
+Returning a function:
+
+Step 4 - Building a Real Decorator	
+Now combine everything: a function that takes a function, defines a wrapper inside, and returns the wrapper.
+Your first decorator - manually applied:
+
+
+•   What Just Happened - Step by Step
+1. my_decorator(say_hello) is called. func = say_hello inside the decorator.
+2. wrapper() is defined inside - it knows about func via closure.
+3. my_decorator returns wrapper (the enhanced version).
+4. say_hello is now pointing to wrapper, not the original function.
+5. Calling say_hello() actually calls wrapper(), which calls the original inside.
+
+Decorators with *args and **kwargs	
+The wrapper above only works for functions with no arguments. To make a decorator work for ANY function, always use *args and **kwargs in the wrapper.
+Universal wrapper template - ALWAYS use this pattern:
+def my_decorator(func):def wrapper(*args, **kwargs):print("Before")result = func(*args, **kwargs)# pass all args throughprint("After")return result# pass return value throughreturn wrapperdef add(a, b):return a + badd = my_decorator(add)print(add(3, 4))# Before # After
+# 7
+   Critical Pattern
+Always use *args and **kwargs in the wrapper function. If you don't, your decorator will BREAK any function that has parameters.
+
+
+Python provides a cleaner, more readable shorthand for applying decorators: the @ symbol placed on the line immediately above the function definition.
+Syntax	
+@decorator syntax:
+
+This is EXACTLY equivalent to writing:
+
+
+ •   The @ is Just Syntax Sugar
+@my_decorator is shorthand. Python automatically calls my_decorator(function) and reassigns the name. Both ways do the same thing - @ is just cleaner and more readable.
+
+Side-by-Side Comparison	
+
+StyleHow It LooksNotesManual stylesay_hi = decorator(say_hi)Explicit but clutters code@ style`@decorator` above defClean, readable, Pythonic
+
+Full Example with @ Syntax	
+Complete working example:
+def shout(func):
+def wrapper(*args, **kwargs): result = func(*args, **kwargs return str(result).upper()
+return wrapper
+
+@shout
+def greet(name):
+return f"hello, {name}"
+
+print(greet("alice"))
+
+)
+#
+
+
+modify
+
+
+the
+
+
+returned
+
+
+value# Output: HELLO, ALICE
+Stacking Multiple Decorators	
+You can stack multiple decorators on a single function. They are applied from BOTTOM to TOP (innermost first).
+Multiple decorators - applied bottom-to-top:
+
+   Stacking Order Rule
+When stacking @A and @B above a function:
+• @B (bottom) is applied first ? result is passed to @A (top)
+• This is equivalent to: function = A(B(function))
+• Read the decorators bottom-up to trace the wrapping order.
+functools.wraps - Preserving Identity	
+By default, a decorator replaces the original function with wrapper, losing the original function's name and docstring. The @functools.wraps fix preserves them - always use it in production code.
+Without functools.wraps:
+With functools.wraps (correct way):
+
+
+   Best Practice
+Always add @functools.wraps(func) inside your decorator's wrapper. This ensures tools like debuggers, documentation generators, and pytest can correctly identify the decorated function.
+
+
+Sometimes you want to pass configuration arguments to the decorator itself - not to the function being decorated. This requires one extra level of nesting: a decorator factory.
+
+
+   Decorator Factory Pattern
+A decorator factory is a function that RETURNS a decorator. You call the factory with your arguments, it gives back a configured decorator, which then wraps your function.
+
+Structure: Three Levels of Nesting	
+Template for a decorator that accepts arguments:
+
+@decorator_factory(my_argument) is equivalent to: my_function = decorator_factory(my_argument)(my_function)
+
+
+Concrete Example - Repeat Decorator	
+A decorator that runs a function n times:
+@repeat(n) - run a function n times:
+
+
+
+
+Decorator with Required + Optional Arguments	
+@prefix_log with optional separator:
+import functools
+
+def prefix_log(prefix, separator=' | '): def decorator(func):
+@functools.wraps(func)
+def wrapper(*args, **kwargs): result = func(*args, **kwargs)
+print(f'{prefix}{separator}{result}') return result
+     return wrapper return decorator
+
+@prefix_log('INFO') def get_status():
+return 'Server is running'
+
+@prefix_log('ERROR', separator=' --> ') def get_error():
+return '404 Not Found'
+
+get_status()# INFO | Server is runningget_error()# ERROR --> 404 Not Found
+
+Plain Decorator vs Decorator Factory	
+
+AspectPlain DecoratorDecorator FactoryLevels of nesting2 (decorator + wrapper)3 (factory + decorator + wrapper)Usage@my_decorator@my_decorator(arg1, arg2)FlexibilityFixed behaviourConfigurable behaviourUse whenNo configuration neededDifferent settings per use
+
+
+This section shows three of the most important and commonly encountered use cases for decorators. Each comes with a complete, runnable implementation.
+
+
+5.1 Logging Decorator	
+
+A logging decorator automatically records when a function is called, what arguments it received, and what it returned - without touching the function's code.
+
+Complete logging decorator:
+import functools import datetime
+
+def logger(func): @functools.wraps(func)
+def wrapper(*args, **kwargs):
+timestamp = datetime.datetime.now().strftime('%H:%M:%S') print(f'[{timestamp}] Calling: {func. name }') print(f' Args: {args}, Kwargs: {kwargs}')
+result = func(*args, **kwargs) print(f' Returned: {result}') return result
+return wrapper
+
+@logger
+def multiply(a, b): return a * b
+
+@logger
+def greet(name, greeting='Hello'): return f'{greeting}, {name}!'
+
+multiply(4, 7)# [14:23:05] Calling: multiply # Args: (4, 7), Kwargs: {}
+# Returned: 28
+greet('Alice', greeting='Hi')# [14:23:05] Calling: greet
+# Args: ('Alice',), Kwargs: {'greeting': 'Hi'}
+# Returned: Hi, Alice!
+   Where This Is Used In Industry
+Django/Flask log every incoming request. AWS Lambda logs every function invocation. Database libraries log SQL queries for debugging. Security systems log every sensitive action.
+5.2 Authentication Decorator	
+
+Authentication decorators check whether a user has the right to run a function before allowing execution. This pattern is used in every web framework.
+
+Role-based access control decorator:
+import functools
+
+def require_role(required_role): def decorator(func):
+@functools.wraps(func)
+def wrapper(user, *args, **kwargs):
+if user.get('role') != required_role:
+print(f'Access Denied: {user["name"]} is not a {required_role}') return None
+print(f'Access Granted: {user["name"]}') return func(user, *args, **kwargs)
+     return wrapper return decorator
+
+@require_role('admin')
+def delete_database(user):
+print(f'{user["name"]} deleted the database.')
+
+@require_role('student') def view_notes(user):
+print(f'{user["name"]} is viewing notes.')
+
+admin = {'name': 'Alice', 'role': 'admin'}
+guest = {'name': 'Bob',	'role': 'guest'}
+student = {'name': 'Carol', 'role': 'student'}
+
+delete_database(admin)# Access Granted: Alice
+# Alice deleted the database.delete_database(guest)# Access Denied: Bob is not a adminview_notes(student)# Access Granted: Carol
+# Carol is viewing notes.
+   Where This Is Used In Industry
+Flask uses @login_required, @admin_required. Django uses @permission_required. FastAPI uses dependency injection decorators. AWS uses IAM policy decorators.
+5.3 Timing / Performance Decorator	
+
+A timing decorator measures how long a function takes to execute. This is essential for performance profiling and identifying bottlenecks.
+
+Timing decorator - simple version:
+import functools import time
+
+def timer(func): @functools.wraps(func)
+def wrapper(*args, **kwargs): start = time.perf_counter() result = func(*args, **kwargs) end = time.perf_counter() elapsed = end - start
+print(f'{func. name } took {elapsed:.6f} seconds') return result
+return wrapper
+
+@timer
+def slow_function(): time.sleep(0.5) return 'done'
+
+@timer
+def compute_sum(n): return sum(range(n))
+
+slow_function()# slow_function took 0.500312 secondscompute_sum(1000000)# compute_sum took 0.023841 seconds
+Advanced timer with threshold warning:
+
+time.sleep(0.05)
+
+@timer_with_warning(threshold_seconds=0.1) def slow_task():
+time.sleep(0.3)
+
+fast_task()# ? OK fast_task: 0.0501s (limit: 0.1s)slow_task()# ?? SLOW slow_task: 0.3002s (limit: 0.1s)
+
+ ?   Where This Is Used In Industry
+Data science teams use timing decorators to profile models. DevOps uses them to detect slow API endpoints. Game developers measure frame-update times. Database engineers detect slow queries.
+
+Use Case Quick Reference	
+
+Use CaseDecorator SyntaxWhat It DoesReal UsageLogging@loggerRecord calls, args, return valuesDebugging, audit trails, monitoringAuthentication@require_role('admin')Restrict access by user roleWeb apps, APIs, admin panelsTiming@timerMeasure execution durationPerformance profiling, SLA checksCaching@functools.lru_cacheStore results of expensive callsAPIs, database queries, ML modelsRetry@retry(times=3)Re-run on failure automaticallyNetwork calls, flaky operationsValidation@validate_inputCheck args before executionData pipelines, form processing
+
+
+Answer all questions honestly. Struggle with hard ones - that is how mastery is built.
+
+?? LEVEL EASY - QuestionsNo tricks - test your recall and basic understanding.Q1. In your own words, what is a decorator? Write a one-paragraph explanation without looking at your notes.Q2. Write a simple decorator called my_decorator that prints 'Function is starting' before and 'Function is done' after any function it wraps. Apply it to a function greet() that prints 'Hello!'.Q3. What is the purpose of *args and **kwargs in the wrapper function inside a decorator? Why is it important to include them?Q4. What does @functools.wraps(func) do? Write an example showing what happens to
+  name	with and without it.
+
+?? LEVEL MEDIUM - QuestionsApply what you know - expect some logic and analysis.Q1. Write a decorator called validate_positive that checks all positional arguments passed to a function. If any argument is negative, print an error message and return None without calling the function. Test it on a function multiply(a, b).Q2. Create a decorator factory called repeat(n) that runs the decorated function exactly n times. Then stack it with a logger decorator and apply both to a function. Trace the exact order in which the wrappers execute.Q3. Write a decorator called count_calls that tracks how many times a function has been called and prints the count each time. Hint: you will need to store state - use a mutable object (like a list or a dictionary attribute on the wrapper).Q4. Explain the difference between these two usages and what error (if any) the wrong one produces:  Option A: @my_decorator  Option B: @my_decorator()  When is each form correct?
+?? LEVEL HARD - QuestionsCombine multiple concepts - think carefully before writing.Q1. Build a complete caching decorator called memoize that stores the results of previous calls in a dictionary (keyed by the arguments). If the same arguments are passed again, return the cached result without re-running the function. Test it on a recursive Fibonacci function and show how many function calls are saved.Q2. Write a decorator factory called rate_limit(max_calls, period_seconds) that allows a function to be called at most max_calls times within any period_seconds window. If the limit is exceeded, raise a RuntimeError with a clear message. Use time.time() to track the window.Q3. Implement a class-based decorator (using  init	and  call ) called RetryOnException that retries the decorated function up to n times if it raises a specific exception type. The exception type and number of retries should be passed to the decorator factory. Demonstrate it on a function that randomly fails.Q4. Design a decorator pipeline: write three separate decorators - @authenticate(role), @timer, and @logger - and apply all three to a single function. Then write a detailed explanation of the exact order in which execution flows through the three wrappers when the function is called, and when it returns. Include a diagram in code comments showing the nesting.
+
+
+
+Decorator Anatomy - Quick Reference Card
+
+
+import functools
+
+def decorator_factory(arg1, arg2):
+def decorator(func):	# receives the function @functools.wraps(func)	# preserve metadata
+def wrapper(*args, **kwargs):	# receives call arguments # --- Before ---
+result = func(*args, **kwargs) # call original function # --- After ---
+     return result	# pass return value through return wrapper
+return decorator
+
+@decorator_factory(arg1, arg2)	# apply to function def my_function(*args, **kwargs):
+...

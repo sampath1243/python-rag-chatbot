@@ -1,0 +1,419 @@
+Python
+Iterators, Generators
+& Dunder (Magic) Methods
+
+
+
+S.NoTopic1What Is an Iterator? Iterable vs Iterator2Iterator Protocol -   iter	and   next	3iter() and next() built-in functions4Building a Custom Iterator Class5Generators - yield keyword6Generator vs Regular Function7Generator Expressions8What Are Dunder (Magic) Methods?9  new	(Singleton) and   init	10  len	and   contains	11Arithmetic Operators -   add  ,   radd  ,   sub  ,   mul  ,   truediv  ,   floordiv  ,
+  mod	12Comparison Operators -   eq  ,   lt  ,   le  ,   gt  ,   ge  ,   hash	13Practice Questions (12 Qs)
+	Iterators	
+
+
+Before writing any code, you must understand two terms that are often confused:
+
+
+IterableIteratorSomething you CAN loop overSomething that PRODUCES values one at a timeHas an  iter () method that returns an iteratorHas both   iter  () and   next  () methodsExamples: list, tuple, str, dict, set, rangeRemembers where it is (has internal state)Does NOT have  next () itselfOnce exhausted, it's done - cannot reset
+Every iterator is an iterable, but not every iterable is an iterator.
+
+Checking what's iterable vs what's an iterator:
+
+
+
+
+
+
+
+The iterator protocol is a formal contract: any object that implements both   iter	and  next	 correctly is an iterator. Python relies on this contract for loops, comprehensions, and unpacking.
+
+
+MethodSignatureWhat It Must DoCalled By  iter	def  iter (self):Return the iterator object itself (return self)iter(obj) and for loops  next	def  next (self):Return the next value; raise StopIteration when exhaustednext(obj) and for loops
+
+Why	iter	returns self?	
+An iterator must itself be iterable so that it can be used directly in a for loop or passed to any function that expects an iterable. Returning self satisfies that requirement.
+
+Minimal iterator protocol example:
+class CountUp:def  init (self, start, stop):self.current = startself.stop	= stopdef  iter (self):return self	# returns itself - satisfies the protocoldef  next (self):if self.current > self.stop:raise StopIteration	# signal that we are donevalue = self.currentself.current += 1return valuecounter = CountUp(1, 5)for n in counter:print(n, end=' ')#12345
+
+
+
+
+
+
+Python provides two built-in functions that directly call the iterator protocol methods for you. Understanding them shows exactly what a for loop does internally.
+
+
+FunctionWhat It DoesEquivalent Toiter(obj)Calls obj.  iter  () and returns the iteratorobj.  iter  ()next(obj)Calls obj. next () and returns the next valueobj.  next  ()next(obj, default)Like next(obj) but returns default instead of raising StopIterationSafe version of next()
+
+Manually driving an iterator with iter() and next()	
+Simulating what a for loop does:
+
+Safe next() with a default value:
+
+
+The for loop - what Python actually runs	
+Equivalent manual implementation of: for x in nums: print(x)
+
+
+
+
+Now combine everything: build a practical custom iterator that generates Fibonacci numbers up to a given count.
+
+Fibonacci iterator - full implementation:
+class Fibonacci:def  init (self, limit):self.limit = limitself.a, self.b = 0, 1self.count = 0def  iter (self):return selfdef  next (self):if self.count >= self.limit:raise StopIterationvalue	= self.aself.a, self.b = self.b, self.a + self.bself.count += 1return valuefor n in Fibonacci(8):print(n, end=' ')#011235813
+
+	Generators	
+
+
+A generator is a special kind of iterator created with a regular function that uses the yield keyword instead of return. Python handles all the   iter	and  next	machinery for you automatically.
+
+
+
+First Generator	
+Simplest possible generator:
+def count_up(start, stop): current = start
+while current <= stop: yield current current += 1
+
+gen = count_up(1, 5) print(type(gen))
+
+for n in gen:
+print(n, end=' ')
+
+
+# #
+
+
+#
+
+
+pause here, send current resume here next time
+
+
+<class 'generator'>
+
+
+to
+
+
+caller#12345
+
+Multiple yield Statements	
+
+
+
+Infinite Generator - Safe Because of Lazy Evaluation	
+Generators are lazy - they produce values only when asked. This makes infinite sequences possible without running out of memory:
+
+def natural_numbers( n = 1
+while True:
+yield n n += 1
+
+gen = natural_number print([next(gen) for):
+
+
+
+
+
+s()
+_ in
+
+# infinite
+
+
+
+
+range(6)])
+
+loop
+
+-
+
+safe
+
+because
+
+of
+
+yield#[1,2,3,4,5,6]
+
+
+
+
+
+
+
+The difference is deeper than just yield vs return. They have fundamentally different execution models.
+
+
+AspectRegular FunctionGenerator FunctionKeyword usedreturnyieldReturnsA single value, then endsA generator object (lazy iterator)ExecutionRuns completely, top to bottomPauses at each yield, resumes on next()StateAll local vars lost after returnAll local vars preserved between yieldsMemoryBuilds full result in memoryOne value at a time - very memory efficientReusable?Yes - call it again any timeNo - once exhausted, must recreateStopIterationNot applicableRaised automatically when function endsUse forSimple calculations, small resultsLarge sequences, streams, pipelines
+Side-by-Side Code Comparison	
+Regular function - builds full list in memory:
+def squares_list(n): result = []
+for i in range(n): result.append(i * i)
+return result	# returns ALL values at once
+
+print(squares_list(5))# [0,1,4,9,16]- entire list in memory
+Generator function - produces one value at a time:
+def squares_gen(n): for i in range(n):
+yield i * i	# yield one value, pause, resume later
+
+gen = squares_gen(5) print(list(gen))# [0,1,4,9,16]- same output,tiny memory footprint
+
+yield vs return - Execution Trace	
+Tracing execution step by step:
+def demo():
+
+here after sending 'A' here after sending 'B'
+
+
+then A
+then B
+then StopIterationprint("Step1")yield 'A'#pausesprint("Step2")yield 'B'#pausesprint("Step3")g = demo()print(next(g))#Step 1print(next(g))#Step 2print(next(g))#Step 3#Step 1#A#Step 2#B#Step 3#StopIteration
+
+
+
+
+
+A generator expression is a compact one-line way to create a generator - similar to a list comprehension but with round brackets () instead of square brackets []. It is lazy, just like a generator function.
+
+
+List Comprehension [ ]Generator Expression ( )[x*x for x in range(5)](x*x for x in range(5))Returns a LISTReturns a GENERATORComputes ALL values immediatelyComputes values lazily on demandUses O(n) memoryUses O(1) memory
+
+Syntax and Examples	
+Basic generator expression:
+With a filter condition:
+evens = (x for x in range(20) if x % 2 == 0)
+print(list(evens))#[0,2,4,6,8,10,12,14,16,18]
+Passing directly to built-in functions (no extra brackets needed):
+total = sum(x*x
+print(total)forxinrange(1001))#sumofsquares0..1000# 333833500
+longest = max(len(w) for w in ['cat','elephant','dog'])# 8
+Generator expression vs list comprehension - memory proof:
+import sys
+lst = [x for x in range(100_ gen = (x for x in range(100_
+
+print(sys.getsizeof(lst)) print(sys.getsizeof(gen))
+000)]
+000))
+
+# ~800,056 bytes
+# ~112 bytes - nearly
+
+
+
+
+nothing!# 800056
+# 112
+
+	Dunder (Magic) Methods	
+
+Dunder methods (short for double-underscore methods, also called magic methods) are special methods with names surrounded by double underscores - like   init  ,   add  ,   len  . Python calls them automatically in response to specific operations or syntax.
+
+Proof - operators call dunder methods:
+x = 5
+y = 3 print(x + y)
+
+#
+
+8
+
+- Python calls x. add (y)print(x. add (y))#8- same results = 'hello' print(len(s))
+#
+5
+- Python calls s. len ()print(s. len ())#5- same result
+MethodWhen Python Calls ItExpression that Triggers Itnew	Creating a new objectMyClass() - before  init  init	Initialising an objectobj = MyClass(args)len	len() is calledlen(obj)contains	in operator is usedx in objadd	+ operatora + bradd	+ with reversed operandsb + a (when b doesn't know how)sub	- operatora - bmul	* operatora * btruediv	/ operatora / bfloordiv	// operatora // bmod	% operatora % beq== operatora == blt< operatora < ble<= operatora <= bgt> operatora > bge>= operatora >= bhash	hash() / used in dict/sethash(obj), obj in {set}
+
+
+These two methods control object creation.   new	allocates memory and returns the new object;
+ init	receives that object and initialises its data. In normal classes you only write   init  . The Singleton pattern is the most common reason to override   new  .
+
+
+The Singleton Pattern with	new	
+A Singleton ensures only ONE object of a class can ever exist. Every call to the class returns the same object:
+Singleton implementation using   new  :
+
+
+
+
+
+
+
+These two dunder methods let your custom class work with len() and the in operator respectively. They are the simplest dunder methods to learn and a great starting point for understanding the pattern.
+
+
+	len	- len() support	
+Implement  len	and Python will call it whenever len(obj) is used. It must return a non-negative integer.
+Custom Playlist class with   len  :
+class Playlist:def  init (self, name):self.name = nameself.songs = []def add(self, song):self.songs.append(song)def  len (self):return len(self.songs)# delegate to list's lenp = Playlist('Chill Mix')p.add('Song A')p.add('Song B')p.add('Song C')print(len(p))	# 3# 3
+
+	contains	- in operator support	
+Implement   contains	and Python calls it for x in obj. It must return True or False.
+  contains  added to Playlist:
+
+
+
+
+
+
+
+
+
+
+Python calls arithmetic dunder methods when you use operators (+, -, *, /, //, %) on your objects. You define these to make custom objects support math operations naturally.
+
+
+OperatorDunder MethodCalled When+ add (self, other)a + b+
+(reversed) radd (self, other)b + a when b's   add	fails- sub (self, other)a - b* mul (self, other)a * b/ truediv (self, other)a / b (always float result)// floordiv (self, other)a // b (integer floor result)% mod (self, other)a % b  (remainder)
+
+	add	and	radd	- Explained	
+ radd	(reflected add) is called when the LEFT operand does not know how to add with the right operand. Python then tries the right operand's   radd	as a fallback.
+When Python calls   radd  :
+
+
+Full Example - Vector Class with All Arithmetic	
+2D Vector with complete arithmetic support:
+
+self.y = y
+
+def  repr (self):
+return f'Vector({self.x}, {self.y})'
+
+def  add (self, other):
+return Vector(self.x + other.x, self.y + other.y)
+
+def  radd (self, other):	# handles scalar + Vector
+if other == 0:	# needed for sum([v1,v2,v3])
+     return self return NotImplemented
+
+def  sub (self, other):
+return Vector(self.x - other.x, self.y - other.y)
+
+def  mul (self, scalar):	# scale by a number
+return Vector(self.x * scalar, self.y * scalar)
+
+def  truediv (self, scalar):
+return Vector(self.x / scalar, self.y / scalar)
+
+def  floordiv (self, scalar):
+return Vector(self.x // scalar, self.y // scalar)
+
+def  mod (self, scalar):
+return Vector(self.x % scalar, self.y % scalar)
+
+v1 = Vector(4, 6) v2 = Vector(1, 2)
+
+
+print(v1 + v2)	# Vector(5, 8)
+print(v1 - v2)	# Vector(3, 4)
+print(v1 * 3)	# Vector(12, 18)
+print(v1 / 2)	# Vector(2.0, 3.0)
+print(v1 // 3)	# Vector(1, 2)
+print(v1 % 3)	# Vector(1, 0) print(sum([v1, v2]))	# Vector(5, 8) - # Vector(5, 8)
+# Vector(3, 4)
+# Vector(12, 18)
+# Vector(2.0, 3.0)
+# Vector(1, 2)
+# Vector(1, 0)
+# Vector(5, 8)
+
+
+
+
+
+
+
+ radd  enables sum()
+
+
+
+
+
+
+
+
+
+Comparison dunder methods let your objects work with ==, <, <=, >, >= and with built-in functions that sort or compare.  hash	is covered last because it only makes sense after understanding   eq  .
+
+
+OperatorDunder MethodReturns== eq (self, other)True / False - equality check< lt (self, other)True / False - less than<= le (self, other)True / False - less than or equal> gt (self, other)True / False - greater than>= ge (self, other)True / False - greater than or equalhash() / in sets&dicts hash (self)An integer - the hash value
+
+		eq	- Equality	
+By default, == checks if two variables point to the same object in memory. Override   eq	to compare by value instead:
+Student compared by student_id:
+
+
+Rich Comparisons - Full Example	
+Product class with all comparison methods:
+
+def  repr (self):
+return f'Product({self.name!r}, {self.price})'
+
+def  eq (self, other):
+if not isinstance(other, Product): return NotImplemented return self.price == other.price
+
+def  lt (self, other):
+if not isinstance(other, Product): return NotImplemented return self.price < other.price
+
+def  le (self, other):
+return self.price <= other.price
+
+def  gt (self, other):
+return self.price > other.price
+
+def  ge (self, other):
+return self.price >= other.price
+
+def  hash (self):
+return hash((self.name, self.price))
+
+laptop = Product('Laptop', 75000) phone = Product('Phone', 25000) book  = Product('Book',  500)
+
+print(laptop > phone)	# True
+print(phone < laptop)	# True
+print(phone >= book)	# True
+
+products = [laptop, phone, book] products.sort()	# uses  lt  print(products)# [Product('Book',500),Product('Phone',25000),Product('Laptop',75000)]
+product_set = {laptop, phone}	# uses  hash  and  eq  
+print(laptop in product_set)# True
+
+	hash	- Why It Pairs with	eq	
+Python's rule: objects that compare equal must have the same hash. That is why defining   eq	 automatically sets  hash	to None (making the object unhashable) unless you also define   hash	 yourself.
+Rule: if a == b then hash(a) == hash(b)
+
+
+
+
+
+
+12 questions spanning all three parts. Write complete, working Python code for each.
+Part A - Iterators
+
+
+1Write a custom iterator class EvenNumbers(start, count) that yields count even numbers starting from start. Implement   iter	and  next	correctly.
+Demonstrate with a for loop and with manual next() calls.
+2Create an iterator class Countdown(n) that counts down from n to 0 (inclusive). After reaching 0, raise StopIteration. Show that calling iter() on your iterator returns itself, and manually trace three next() calls.
+3Write a function simulate_for_loop(iterable) that replicates what Python's for loop does internally - using iter() and next() and catching StopIteration. Test it on a list, a string, and your custom EvenNumbers iterator from Q1.
+Part B - Generators
+
+
+4Write a generator function prime_generator() that yields prime numbers infinitely. Use it to print the first 10 primes. Explain why this would be impossible with a regular function returning a list for a truly infinite sequence.
+5Write a generator function running_total(numbers) that takes a list of numbers and yields a running cumulative total at each step. Example: [1, 3, 5, 2] yields 1, 4, 9, 11.
+6Compare memory usage of a list comprehension vs a generator expression for the first 500,000 squares. Use sys.getsizeof() to measure. Also time them using time.perf_counter() to compare speed.
+Part C - Dunder Methods
+
+
+7Implement the Singleton pattern for a class AppConfig that stores a settings dictionary. Verify that ConfigA = AppConfig() and ConfigB = AppConfig() are the same object with is. Show that settings added via ConfigA are accessible from ConfigB.
+8Create a class ShoppingCart with a list of items. Implement   len	(number of items) and  contains	(check if item name is in cart). Add at least 5 items and test both methods.
+9Write a class Fraction(numerator, denominator) with full arithmetic support:
+  add  ,   sub  ,   mul  ,   truediv  . Simplify results using math.gcd(). Test: Fraction(1,2) + Fraction(1,3) should give Fraction(5,6).
+
+10Add  eq ,  lt ,  le ,  gt ,  ge , and  hash	to your Fraction class. Verify that fractions can be sorted with sorted(), stored in a set, and used as dictionary keys. Test that Fraction(1,2) == Fraction(2,4) returns True.
+11Write a class Matrix(rows) that wraps a 2D list. Implement   add	(element-wise addition) and  mul	(scalar multiplication). Also add  len	(number of rows) and  contains	(check if a value exists anywhere in the matrix).
+12COMBINED CHALLENGE: Write a class NumberStream that is BOTH a custom iterator AND supports dunder arithmetic. It should: (a) iterate over a sequence of numbers given at init, (b) support + with another NumberStream (concatenate sequences), (c) support len(), (d) support in operator, (e) return a generator expression when .squares() is called. Demonstrate all features.
+
+
+
+Quick Reference - All Dunder Methods in This Document
+
+MethodWhen Python Calls ItExpression that Triggers Ititer	for loops, iter()for x in obj:next	next(), for loopsnext(obj)new	Object creation - before
+  init	obj = MyClass()init	Object initialisationobj = MyClass(args)len	len() built-inlen(obj)contains	in operatorx in objadd	+ operatora + bradd	Reflected + (fallback)0 + obj / sum([obj])sub	- operatora - bmul	* operatora * btruediv	/ operator (float)a / bfloordiv	// operator (int floor)a // bmod	% operator (remainder)a % beq	== operatora == b
+lt	< operatora < ble	<= operatora <= bgt	> operatora > bge	>= operatora >= bhash	hash() / set / dict keyhash(obj)

@@ -1,0 +1,279 @@
+Python
+Object-Oriented Programming
+Classes · Objects · Constructors · Methods
+A Complete Student Guide
+
+
+
+S.noTopic1What Is a Class? What Is an Object?2Class Variables vs Object (Instance) Variables3  new	- Memory Allocation4  init	- The Constructor5  dict	- Inspecting Object Namespace6  class	- Inspecting Type at Runtime7isinstance() - Type Checking8Instance Methods9Class Methods (@classmethod)10Static Methods (@staticmethod)11Methods Comparison Table12Practice Questions (10 Qs)
+	Class, Object & Constructor	
+
+
+Everything in Python is an object. To create objects of our own custom type, we define a class. A class is the blueprint; an object is the actual thing built from that blueprint.
+
+
+Real WorldPython ClassPython ObjectHouse blueprintclass Househouse1 = House(...)Car design specclass Carmy_car = Car(...)Student form templateclass Studentalice = Student(...)Cookie cutterclass Cookiechoc_cookie = Cookie(...)
+
+Defining a Class and Creating Objects	
+Basic class definition:
+
+
+
+
+
+
+
+Before learning how objects are created (  new	and  init ), you must understand what gets stored inside them. Python has two kinds of variables in a class:
+
+
+Class VariableObject (Instance) VariableDefined directly inside the class body (not inside any method)Defined inside   init	using self.var = valueShared across ALL objects of the classEach object has its OWN copy - fully independentSame value for every instance unless overriddenDifferent objects can have different valuesAccess: ClassName.var or self.varAccess: self.var or obj.varChanged via ClassName.var = new_valueChanged via obj.var = new_value
+
+Full Example - Class vs Object Variables	
+Demonstrating both types:
+
+
+
+
+
+When you write alice = Student('Alice', 21), Python runs TWO methods in sequence. The first is
+  new  . Most beginners never see it directly, but it is important to know it exists.
+
+
+
+Execution Order	
+Proof that   new  runs before   init  :
+
+
+When Would You Override	new	?	
+Rarely - mainly when creating immutable types (like a custom int or str subclass) or implementing the Singleton pattern:
+Singleton pattern using   new  :
+
+
+
+
+
+
+
+
+
+ init	is the initialiser (commonly called the constructor). It runs automatically every time a new object is created. Its job is to set up the object's initial state by assigning values to object variables.
+
+
+Syntax & self	
+  init  signature:
+
+self is a reference to the object being created. Python passes it automatically - you do not pass it when calling. Name it self by convention (mandatory convention in Python).
+
+
+Complete Example	
+Class with a full   init  :
+
+	init	with Validation	
+You can add logic inside   init	to validate data before storing it:
+
+
+
+
+
+
+
+
+
+Every object and class in Python stores its attributes in a dictionary called   dict  . Knowing this helps you debug, introspect, and understand how attribute lookup works.
+
+
+Object	dict	
+Inspecting an object's attributes:
+class Student:
+school = 'Python Academy'
+def  init (self, name, age): self.name = name
+self.age = age
+
+alice = Student('Alice', 21) print(alice. dict )# {'name': 'Alice', 'age': 21}
+print(Student. dict )	# class-level  dict  # {' module ': ' main ', 'school': 'Python Academy', ' init ': <function
+...>, ...}
+Modifying	dict	Directly	
+You can add or remove attributes dynamically using   dict	or getattr/setattr/delattr:
+
+alice. dict ['grade'] = 'A' print(alice.grade)
+
+setattr(alice, 'gpa', 9.5) print(getattr(alice, 'gpa'))
+
+delattr(alice, 'grade') print(alice. dict )
+
+
+## adds gr # A
+
+ cleaner # 9.5
+
+# removeade attribute
+
+
+way to set
+
+
+attribute# {'name': 'Alice', 'age': 21,'gpa':9.5}
+
+
+
+
+
+
+
+Every object has a  class	attribute that points to the class it was created from. This lets you inspect and compare types at runtime.
+
+
+Using	class	
+
+
+	class	vs type()	
+
+  class	type()What it isAttribute on the objectBuilt-in functionResultSame class referenceSame class referenceUse in practiceobj.  class	type(obj) - preferred styleCan be overridden?Yes (rare)No - always returns true type
+
+
+
+
+
+
+
+isinstance(object, class) returns True if the object is an instance of the given class OR any of its subclasses. This is the recommended way to check types in Python.
+
+
+Basic Usage	
+
+
+isinstance() with Multiple Types	
+Pass a tuple of types as the second argument to check against several at once:
+
+
+
+isinstance()type() comparisonisinstance(rex, Dog)type(rex) is DogChecks class AND inheritance chainOnly checks exact class, ignores inheritancePreferred in PythonUse when exact type matters
+	Methods	
+
+
+Instance methods are the most common type of method. They operate on a specific object (instance) and have access to both object variables and class variables through self.
+
+
+
+Full Example with Multiple Instance Methods	
+BankAccount with instance methods:
+class BankAccount:
+def  init (self, owner, balance=0): self.owner	= owner self.balance	= balance self.transactions = []
+
+def deposit(self, amount):	# instance method self.balance += amount self.transactions.append(('deposit', amount))
+return self.balance
+
+def withdraw(self, amount):	# instance method
+if amount > self.balance:
+     raise ValueError('Insufficient funds') self.balance -= amount self.transactions.append(('withdraw', amount)) return self.balance
+
+def get_summary(self):	# instance method
+return f'{self.owner}: Rs.{self.balance}'
+
+acc = BankAccount('Alice', 1000) acc.deposit(500) acc.withdraw(200) print(acc.get_summary())
+# Alice: Rs.1300
+
+
+
+
+
+
+
+A class method is bound to the CLASS itself rather than to any individual object. It receives the class (cls) as its first argument instead of the instance (self).
+
+
+
+Primary Use Case - Alternative Constructors	
+Class methods are most commonly used to provide alternative ways to create objects:
+Alternative constructors with @classmethod:
+class Student:school = 'Python Academy'count = 0def  init (self, name, age):self.name = nameself.age = ageStudent.count += 1@classmethoddef from_string(cls, data_string):name, age = data_string.split(',')return cls(name.strip(), int(age.strip()))@classmethoddef get_school(cls):return cls.school	# access class variable@classmethoddef get_count(cls):return cls.countalice = Student('Alice', 21)bob	= Student.from_string('Bob, 19')	# alternative constructorprint(alice.name, bob.name)# AliceBobprint(Student.get_count())# 2print(Student.get_school())# Python Academy
+
+
+
+
+
+
+
+
+A static method is a regular function that lives inside a class for organisational purposes. It has NO access to self (the object) or cls (the class) - it is completely independent of both.
+
+
+
+Example - Utility / Helper Methods	
+Static methods as utility functions:
+
+Another Example - Validation Utilities	
+
+
+
+
+
+
+
+
+Use this reference table whenever you are unsure which method type to choose.
+
+
+Instance MethodClass MethodStatic MethodFirst parameterself (object)cls (class)NoneDecorator needed?No (default)@classmethod@staticmethodAccess object vars?Yes - via selfNoNoAccess class vars?Yes - via self or ClassNameYes - via clsOnly if imported/passedModify class vars?Via ClassName.var = ...Via cls.var = ...No (not directly)Typical useWork with instance dataAlternative constructors, class- level opsUtility / helper logicCalled on object?Yes - obj.method()Yes - obj.method()Yes - obj.method()Called on class?No (needs self)Yes - Class.method()Yes - Class.method()
+
+All Three Together - One Class	
+Temperature class using all three method types:
+class Temperature:
+unit = 'Celsius'	# class variable
+
+def  init (self, degrees):
+self.degrees = degrees	# object variable
+
+def describe(self):	# instance method
+return f'{self.degrees} {Temperature.unit}'
+
+@classmethod
+def from_fahrenheit(cls, f):	# class method - alt constructor
+return cls((f - 32) * 5 / 9)
+
+@staticmethod
+def is_freezing(degrees):	# static method - pure utility
+return degrees <= 0
+
+t1 = Temperature(25)
+t2 = Temperature.from_fahrenheit(212)	# 100 C
+
+print(t1.describe())	# 25 Celsius
+print(t2.describe())	# 100.0 Celsius print(Temperature.is_freezing(-5))	# True print(Temperature.is_freezing(25))	# False
+# 25 Celsius
+# 100.0 Celsius # True
+# False
+
+
+
+10 questions spanning both Part A and Part B. Write and run your answers in Python.
+Part A - Class, Object & Constructor
+
+
+1Create a class called Car with class variable fuel_type = 'Petrol' and object variables: make, model, year, and price. Write   init	to set them. Create two Car objects and print all their attributes. Also print the class variable.
+2Demonstrate the difference between   new	and  init . Write a class called Traced where both  new	and  init	print a message. Create two objects and observe the exact order of the printed messages.
+3Write a class Employee with a class variable employee_count = 0. Every time an Employee object is created in   init	, increment the count. After creating 4
+employees, print Employee.employee_count to verify it is 4.
+Part A - Dunder Attributes & isinstance
+
+
+4Create a Student object with attributes name, age, and gpa. Print its   dict	before and after adding a new attribute called city using setattr(). Also print
+Student.  dict	and explain the difference from the object's   dict  .
+5Write a function identify(obj) that uses  class .		name	and type() to print the type of any object passed to it. Test it with an int, a str, a list, and a custom class object. Also verify that type(obj) and obj.  class	give the same result.
+6Create a class hierarchy: Vehicle ? Car ? ElectricCar. Create one object of ElectricCar. Using isinstance(), check if it is an instance of ElectricCar, Car, Vehicle, and object. Explain why all four can be True at the same time.
+Part B - Methods
+
+
+7Write a class Circle with object variable radius. Add three instance methods: area() returning p×r², perimeter() returning 2×p×r, and describe() returning a formatted string with both values. Use math.pi for accuracy.
+8Extend the Student class: add a class variable total_students = 0. Add a @classmethod called from_csv(cls, csv_string) that parses 'Name,Age,GPA' and
+
+
+9Write a class PasswordUtils with three @staticmethod methods: is_strong(password) - returns True if length>=8, has a digit, and has an uppercase; generate_hint(password) - returns first 2 chars + '***'; validate_email(email) - returns True if '@' and '.' are present. Test all three.
+10Write a complete Library class that uses ALL concepts from this document: class variable library_name, object variables (books list, member_name),   init	with validation (name cannot be empty), instance method add_book(title), class method create_guest(cls) that returns a Library with name='Guest', static method is_valid_title(title) that checks the title is a non-empty string. Demonstrate each feature with output.
+
+
+
+Quick Reference - Entire Document
+
+ConceptSyntax / KeywordOne-Line MeaningClassclass MyClass:Blueprint for creating objectsObjectobj = MyClass()A specific instance of a classClass Variableschool = 'X' (inside class, outside methods)Shared by all objectsObject Variableself.name = name (inside   init  )Unique per object  new	def   new  (cls):Allocates memory - runs BEFORE
+  init	  init	def   init  (self, ...):Initialises the object - the constructor  dict	obj.  dict	Dictionary of the object's own attributes  class	obj.  class	The class this object was created fromisinstanceisinstance(obj, Class)True if obj is instance of Class or subclassInstance Methoddef method(self):Acts on the object - has access to selfClass Method@classmethod def m(cls):Acts on the class - has access to clsStatic Method@staticmethod def m():No self or cls - pure utility function

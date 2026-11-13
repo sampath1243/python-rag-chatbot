@@ -1,0 +1,633 @@
+Python
+Object-Oriented Programming
+
+
+
+
+
+
+SectionTopicPillar / Area1Types of InheritanceInheritance2MRO - Method Resolution Order (  mro  , mro())Inheritance3super() - in Instance Methods and Class MethodsInheritance4Questions - Inheritance5Method OverridingPolymorphism6Duck TypingPolymorphism7Questions - Polymorphism8Access Modifiers - Protected (_) and Private (  )Encapsulation9@property - GetterEncapsulation10@setter - Setter with ValidationEncapsulation11Questions - Encapsulation12abc Module, ABC, @abstractmethodAbstraction13Questions - Abstraction14SOLID Principles - S O L I DSOLID15Questions - SOLID16Mixed Topic Questions (All Pillars + SOLID)Final
+
+
+
+
+
+
+Inheritance lets a child class acquire the attributes and methods of a parent class. Python supports five types of inheritance:
+
+
+TypeDescriptionStructureSingleOne child inherits from one parentA ? BMulti-levelChain of inheritance (grandparent ? parent ? child)A ? B ? CMultipleOne child inherits from two or more parentsA + B ? CHierarchicalMultiple children inherit from the same parentA ? B, A ? CHybridCombination of multiple and hierarchicalA+B ? C, A ? B
+? D
+
+1. Single Inheritance	
+One parent ? one child:
+
+
+2. Multi-level Inheritance	
+Grandparent ? Parent ? Child:
+
+
+
+
+3. Multiple Inheritance	
+Child inherits from two parents:
+
+
+4. Hierarchical Inheritance	
+Multiple children from one parent:
+class Shape:
+def area(self): return 0
+
+class Circle(Shape):
+def  init (self, r): self.r = r
+def area(self): return 3.14 * self.r **
+
+class Rectangle(Shape):
+def  init (self, w, h): self.w, self.h def area(self): return self.w * self.h
+
+print(Circle(5).area())	# 78.5
+print(Rectangle(4, 6).area())	# 24
+
+
+
+
+2
+
+
+=
+
+
+
+
+
+
+
+w,
+
+
+
+
+
+
+
+h# 78.5
+# 24
+5. Hybrid Inheritance	
+Hybrid is a combination of multiple and hierarchical inheritance. The MRO (next section) is critical to understand how Python resolves method calls in this case.
+
+class A:
+def hello(self): return 'Hello from A'
+
+class B(A): pass class C(A): pass
+
+class D(B, C):	# hybrid
+pass
+
+print(D().hello())	# Hello
+print([c. name  for c in D. mro ])
+
+
+
+
+
+- B
+
+
+from
+
+
+
+
+
+and
+
+
+A
+
+
+
+
+
+C
+
+
+
+
+
+both
+
+
+
+
+
+inherit
+
+
+
+
+
+A# Hello from A
+# ['D', 'B', 'C', 'A', 'object']
+
+
+
+
+
+
+When a method is called on an object, Python searches for it in a specific order. This order is called the Method Resolution Order (MRO). It prevents ambiguity in multiple inheritance scenarios.
+
+
+
+Inspecting MRO	
+  mro  attribute and mro() method:
+class A: passclass B(A): passclass C(A): passclass D(B, C): passprint(D. mro )# (<class 'D'>,<class 'B'>, <class 'C'>,<class 'A'>,<class 'object'>)print(D.mro())# [<class 'D'>,<class 'B'>, <class 'C'>,<class 'A'>,<class 'object'>]
+for c in D.mro(): print(c. name )# D ? B ? C? A ? object
+object|A/	\B	C\	/DMRO: D ? B ? C ? A ? object	(left subtree before right, depth-first)
+
+MRO determines which method runs	
+Method lookup follows MRO order:
+class A:
+def greet(self):
+
+class B(A):
+def greet(self):
+
+class C(A):
+def greet(self):
+class D(B, C): pass print(D().greet())
+return
+
+
+return
+
+
+return
+
+
+
+#
+'Hello from A'
+
+
+'Hello from B'
+
+
+'Hello from C'
+
+
+
+looks up MRO: D?B
+
+
+
+
+
+
+
+
+
+
+
+found
+
+
+
+
+
+
+
+
+
+
+
+in
+
+
+
+
+
+
+
+
+
+
+
+B
+
+
+
+
+
+
+
+
+
+
+
+-
+
+
+
+
+
+
+
+
+
+
+
+stops# Hello from B
+
+
+
+
+
+super() returns a proxy object that delegates method calls to the next class in the MRO. It lets you call a parent method without hardcoding the parent class name.
+
+
+ •   Why super() over ParentClass.method(self)
+If you rename the parent class, super() still works - no change needed. super() follows MRO correctly in multiple inheritance.
+Hardcoding the parent name (Animal.speak(self)) breaks in diamond inheritance.
+
+super() in Instance Methods	
+Calling parent   init  and extending methods:
+class Person:
+def  init (self, name, age): self.name = name
+self.age = age
+
+def describe(self):
+return f'{self.name}, age {self.age}'
+
+class Employee(Person):
+def  init (self, name, age, department):
+super(). init (name, age)	# call Person. init  via MRO
+self.department = department	# add extra attribute
+
+def describe(self):
+base = super().describe()	# reuse parent method
+return f'{base}, dept: {self.department}'
+
+class Manager(Employee):
+def  init (self, name, age, department, team_size): super(). init (name, age, department) self.team_size = team_size
+
+def describe(self):
+base = super().describe()
+return f'{base}, team: {self.team_size} people'
+
+m = Manager('Alice', 35, 'Engineering', 10) print(m.describe())
+# Alice, age 35, dept: Engineering, team: 10 people
+
+super() in Class Methods	
+super() works in @classmethod too. The proxy delegates to the next class in MRO, passing cls through:
+super() inside @classmethod for factory methods:
+
+
+
+
+
+?? Inheritance - Practice Questions	
+
+
+1Multi-level Inheritance
+Create a class Vehicle with attributes make, model, and year, and a method info(). Create a child class Car(Vehicle) that adds a doors attribute and overrides info() to include doors. Create ElectricCar(Car) that adds battery_range and calls super().info() to extend the output. Demonstrate all three levels.
+2Multiple Inheritance + MRO
+Build a multiple inheritance scenario: class Printable with a method print_info(), class Saveable with save(). Create class Document(Printable, Saveable) that uses both. Print the MRO and explain the resolution order.
+3Diamond Problem + MRO
+Create the classic diamond problem: A ? B, A ? C, D(B,C). Give all four classes a method hello() that returns their name. Show which hello() gets called on D(). Then remove hello() from B and show how the MRO changes the result.
+4super() Chaining
+Write a class hierarchy School ? Department ? Course. Use super() in every
+ init	to chain initialisation correctly. Each class adds one attribute. Prove that Manager(super()) in one class correctly delegates through the full chain.
+
+
+
+
+
+
+Method overriding happens when a child class provides its own implementation of a method that already exists in its parent class. The child's version replaces the parent's version when called on a child object.
+
+Method overriding - Shape hierarchy:
+class Shape:def area(self):return 0def describe(self):return f'Shape with area: {self.area():.2f}'class Circle(Shape):def  init (self, radius):self.radius = radiusdef area(self):	# override parent's area()return 3.14159 * self.radius ** 2class Rectangle(Shape):def  init (self, w, h):self.w, self.h = w, hdef area(self):	# override parent's area()return self.w * self.hclass Triangle(Shape):def  init (self, b, h):self.b, self.h = b, hdef area(self):return 0.5 * self.b * self.hshapes = [Circle(7), Rectangle(4, 6), Triangle(5, 8)]for s in shapes:print(s.describe())# Shape # Shape
+# Shapewith area: 153.94
+with area: 24.00
+with area: 20.00
+
+
+
+
+
+
+Duck typing is Python's approach to polymorphism without inheritance. If an object has the methods and attributes you need, you can use it - regardless of its class.
+
+"If it walks like a duck and quacks like a duck, then it is a duck."
+
+You don't check IS-A relationships. You just call the method. If it works, great. If not, you get an AttributeError.
+
+Duck typing - no inheritance required:
+
+Traditional Type CheckingDuck TypingChecks actual class/type firstChecks behaviour (can it do the thing?)Uses isinstance() or type()Just calls the methodWorks with class hierarchiesWorks with ANY object that fitsMore restrictive - needs inheritanceFlexible - no inheritance required
+
+
+
+
+?? Polymorphism - Practice Questions	
+
+
+5Method Overriding
+Build a payment system with a base class Payment(amount) and three subclasses: CreditCard, UPI, and NetBanking. Each overrides a method process() with its own logic. Write a function checkout(payment) that calls process() on any payment object and demonstrate polymorphism.
+6Duck Typing
+Create three completely unrelated classes: PDFReport, ExcelSheet, and EmailMessage. Each has a method send(). Write a function dispatch(item) that calls send() using duck typing. Prove that no inheritance is needed.
+7Polymorphism + Duck Typing
+Write a function total_area(shapes) that takes a list of any shape objects and returns their combined area. Use duck typing - any object with an area() method should work. Test with Circle, Rectangle, Triangle, and a custom class Hexagon.
+8Concept Question
+Explain the difference between method overriding and method overloading. Python does not natively support overloading - show how to simulate it using *args or default parameters.
+
+
+
+
+Encapsulation means keeping internal data safe and hidden from outside code. Python uses naming conventions (not hard enforcement) to signal access levels.
+
+
+PrefixNameConvention MeaningPython EnforcementNo prefixPublicAnyone can accessNone - open access_singleProtectedInternal use; subclasses OKConvention only - Python allows access doublePrivateClass internal onlyName mangling - Python renames it
+
+Public, Protected, Private - Full Demo	
+All three access levels in one class:
+class BankAccount:
+def  init (self, owner, balance):
+self.owner	= owner	# public - accessible anywhere
+self._log	= []	# protected - for internal / subclass use
+self. balance = balance	# private - name-mangled to
+_BankAccount balance
+
+def deposit(self, amount): self. balance += amount
+self._log.append(f'+{amount}')
+
+def get_balance(self):	# public method to expose balance safely
+return self. balance
+
+acc = BankAccount('Alice', 5000) acc.deposit(1000)
+
+print(acc.owner)	# Alice - public, fine
+print(acc._log)	# ['+1000'] - accessible but signals 'internal'
+print(acc.get_balance())	# 6000 - via method
+
+print(acc. balance)	# AttributeError! - private print(acc._BankAccount balance)		# 6000 - accessible via mangled name (don't do this!)
+# Alice
+# ['+1000']
+# 6000
+# AttributeError: 'BankAccount' object has no attribute ' balance'
+# 6000	? via mangled name
+
+
+
+
+
+
+
+
+
+@property lets you access a method like an attribute - without calling it with parentheses. It turns a method into a read-only (or read-write) computed attribute.
+
+@property - expose private data safely:
+class Temperature:def  init (self, celsius):self. celsius = celsius	# private storage@propertydef celsius(self):	# getter - called as obj.celsiusreturn self. celsius@propertydef fahrenheit(self):	# computed property - no separate storagereturn self. celsius * 9/5 + 32t = Temperature(100)print(t.celsius)	# 100	- no parentheses neededprint(t.fahrenheit)	# 212.0 - computed on the flyt.celsius = 25	# AttributeError - no setter defined yet# 100
+# 212.0
+# AttributeError: can't set attribute
+
+
+
+
+
+
+@property.setter lets you intercept assignment (obj.attr = value) and run validation or transformation before storing the value. You must define a getter with @property first.
+
+@property + @setter - full pattern:
+class Student:
+def  init (self, name, age):
+self.name = name	# uses the setter below automatically
+self.age = age	# uses the setter below automatically
+
+@property
+def name(self):
+return self. name
+
+@name.setter
+def name(self, value):
+if not isinstance(value, str) or len(value.strip()) == 0: raise ValueError('Name must be a non-empty string')
+self. name = value.strip().title()
+
+@property
+def age(self):
+return self. age
+
+@age.setter
+def age(self, value):
+if not isinstance(value, int) or not (0 < value < 150): raise ValueError(f'Invalid age: {value}')
+self. age = value
+
+@property
+def profile(self):	# computed, read-only property
+return f'{self.name} (age {self.age})'
+
+s = Student('alice smith', 21)
+print(s.name)	# Alice Smith - auto-formatted
+print(s.age)	# 21
+print(s.profile)	# Alice Smith (age 21)
+s.age = 200	# ValueError: Invalid age: 200
+# Alice Smith # 21
+# Alice Smith (age 21)
+# ValueError: Invalid age: 200
+
+PatternSyntaxWhat It DoesGetter@propertyRead value - obj.attr (no parentheses)Setter@attr.setterValidate + store on obj.attr = valueDeleter@attr.deleterRun logic on del obj.attrRead-only@property only, no setterAssignment raises AttributeError
+?? Encapsulation - Practice Questions	
+
+
+9@property + @setter
+Design a BankAccount class with a private   balance. Create @property balance as a getter. Create a @balance.setter that raises ValueError if the value is negative.
+Add methods deposit(amount) and withdraw(amount) that update balance through the setter. Test all edge cases.
+10Computed Properties
+Create a class Circle with a private   radius. Add @property radius (getter) and @radius.setter that validates the radius is positive. Add a computed @property area and @property circumference. Show that changing radius automatically updates both computed properties.
+11Access Modifiers
+Write a class Config with protected _settings dict and private   secret_key. Demonstrate: (a) public attribute access, (b) protected access with a warning comment, (c) private access via name mangling (and explain why you should NOT do this in real code), (d) a safe public method get_setting(key) as the correct approach.
+12Property Chaining
+Build a Person class using @property for first_name, last_name, and full_name. full_name should be a computed read-only property. Add a @full_name.setter that splits the input string on a space and updates first and last names separately.
+
+
+
+Abstraction means showing only what is necessary and hiding the details. In Python, formal abstraction is implemented with the abc (Abstract Base Classes) module. It lets you define a blueprint (interface) that child classes MUST implement.
+
+
+Basic ABC Example	
+Defining and using an abstract base class:
+from abc import ABC, abstractmethod
+
+class Shape(ABC):	# abstract base class
+@abstractmethod
+def area(self):	# abstract method - MUST be overridden
+pass
+
+@abstractmethod
+def perimeter(self): pass
+
+def describe(self):	# concrete method - shared by all
+return f'Area={self.area():.2f}, Perimeter={self.perimeter():.2f}'
+
+class Circle(Shape):
+def  init (self, r): self.r = r
+def area(self):	return 3.14159 * self.r ** 2 def perimeter(self):	return 2 * 3.14159 * self.r
+
+class Square(Shape):
+def  init (self, s): self.s = s
+def area(self):	return self.s ** 2 def perimeter(self):	return 4 * self.s
+
+print(Circle(5).describe()) print(Square(4).describe())
+
+s = Shape()	# TypeError - cannot instantiate ABC
+# Area=78.54, Perimeter=31.42 # Area=16.00, Perimeter=16.00
+# TypeError: Can't instantiate abstract class Shape with abstract methods area, perimeter
+
+Abstract Properties with @property + @abstractmethod	
+Forcing subclasses to implement properties:
+from abc import ABC, abstractmethod
+
+class DatabaseDriver(ABC): @property @abstractmethod
+def connection_string(self):	# must provide this property
+pass
+
+@abstractmethod
+def connect(self): pass
+
+@abstractmethod
+def execute(self, query): pass
+
+@abstractmethod
+def disconnect(self): pass
+
+class MySQLDriver(DatabaseDriver): @property
+def connection_string(self):
+return 'mysql://localhost:3306'
+def connect(self):	print(f'Connecting to {self.connection_string}') def execute(self, q): print(f'MySQL: {q}')
+def disconnect(self): print('MySQL disconnected')
+
+db = MySQLDriver() db.connect()
+db.execute('SELECT * FROM users') db.disconnect()
+# Connecting to mysql://localhost:3306 # MySQL: SELECT * FROM users
+# MySQL disconnected
+
+ConceptWhat It MeansSyntaxABCAbstract Base Class - cannot be instantiatedclass MyClass(ABC):@abstractmethodMethod that subclass MUST implement@abstractmethod def method(self): passConcrete classImplements all abstract methods - can be instantiatedclass Sub(ABC): def method(self): return ...Abstract propertySubclass must implement as @property@property + @abstractmethod together
+
+
+
+?? Abstraction - Practice Questions	
+
+
+13ABC + @abstractmethod
+Design an abstract class PaymentGateway(ABC) with abstract methods: initiate(amount), verify(transaction_id), and refund(transaction_id). Implement two concrete classes RazorpayGateway and PayPalGateway. Verify that you cannot instantiate PaymentGateway directly.
+14Abstract Contract Enforcement
+Create an abstract class Animal(ABC) with abstract methods speak() and move(), and a concrete method breathe() shared by all. Implement Dog, Bird, and Fish.
+Prove the contract is enforced by trying to instantiate Animal or a subclass that forgot to implement speak().
+15Abstract Properties
+Combine abstraction with properties: write an abstract class DataStorage(ABC) with an abstract property storage_type and abstract methods save(data), load(key), and delete(key). Implement FileStorage and MemoryStorage. Demonstrate that both are interchangeable.
+16Concept Distinction
+Explain in your own words: what is the difference between abstraction and encapsulation? Write one class example that demonstrates BOTH concepts at the same time.
+
+
+
+
+SOLID is a set of five design principles introduced by Robert C. Martin (Uncle Bob). They guide how to write OOP code that is easy to maintain, extend, and test.
+
+
+SSingle Responsibility Principle - A class should have only ONE reason to change
+Every class should do exactly one thing. If you find yourself writing 'and' when describing what a class does, it has too many responsibilities.
+? Wrong: class UserManager handles login AND sends emails AND logs to DB
+ ? Right: class UserAuthenticator, class EmailService, class UserLogger - one each
+SRP - before (violation) and after (fixed):
+
+OOpen/Closed Principle - Open for extension, closed for modification
+You should be able to add new behaviour by writing new code - not by editing existing, tested code. Achieve this with inheritance and abstraction.
+? Wrong: adding a new shape requires editing the existing area calculator function
+ ? Right: each shape implements its own area() - add new shapes without touching old code
+OCP - closed to modification, open to extension:
+
+
+LLiskov Substitution Principle - Subclasses must be substitutable for their parent class
+Any code that works with a Parent should work equally well with a Child - without knowing it is a Child. A subclass must not remove functionality or change semantics.
+ ? Wrong: Square extends Rectangle but breaks setWidth()/setHeight() because a square keeps both equal
+ ? Right: Shape ? Rectangle and Shape ? Square independently, without violating each other's contract
+LSP - violation and fix:
+
+
+
+IInterface Segregation Principle - No class should be forced to implement methods it does not need
+Split large interfaces into smaller, specific ones. A class should only implement what it actually needs.
+ ? Wrong: a huge Printer interface forces all printers to implement scan(), fax(), and staple()
+ ? Right: Printable, Scannable, Faxable as separate interfaces - BasicPrinter only implements Printable
+ISP - split interfaces:
+
+DDependency Inversion Principle - Depend on abstractions, not on concrete implementations
+High-level modules should not depend on low-level modules. Both should depend on abstractions (interfaces/ABCs). This makes code flexible and easy to swap.
+ ? Wrong: class ReportGenerator directly creates a MySQLDatabase() inside - hardcoded dependency
+ ? Right: ReportGenerator depends on a Database ABC - any database can be injectedDIP - dependency injection via abstraction:
+from abc import ABC, abstractmethod
+
+# ? VIOLATION - tightly coupled to MySQL class ReportGeneratorBad:
+def  init (self):
+self.db = MySQLDatabase()	# hardcoded - impossible to swap
+
+# ? CORRECT - depends on abstraction class Database(ABC):
+@abstractmethod
+def query(self, sql): pass
+
+class MySQLDatabase(Database):
+def query(self, sql): return f'MySQL: {sql}'
+
+class PostgresDatabase(Database):
+def query(self, sql): return f'Postgres: {sql}'
+
+class ReportGenerator:
+def  init (self, db: Database):	# depends on abstraction, not concrete
+self.db = db
+def generate(self, query): return self.db.query(query)
+
+r1 = ReportGenerator(MySQLDatabase())
+r2 = ReportGenerator(PostgresDatabase()) print(r1.generate('SELECT *')) print(r2.generate('SELECT *'))
+# MySQL: SELECT *
+# Postgres: SELECT *
+
+
+PrincipleOne-line RuleKey TechniqueS - Single ResponsibilityOne class, one reason to changeSplit classes by responsibilityO - Open / ClosedOpen for extension, closed for modificationInheritance + abstractionL - Liskov SubstitutionSubclass must fully replace parentKeep the contract - don't weakenI - Interface SegregationDon't force unused method implementationsMultiple small ABCs over one big oneD - Dependency InversionDepend on abstractions, not concretesInject dependencies via ABC
+?? ? SOLID - Practice Questions	
+
+
+17Single Responsibility
+Take this class and refactor it to follow SRP: class BlogPost: def
+ init (self,title,content)... def save_to_file(self)... def send_to_newsletter(self)... def generate_html(self)... Create separate classes for each responsibility.
+18Open/Closed
+Write a NotificationService that sends messages. Start with only EmailNotifier. Then add SMSNotifier and PushNotifier WITHOUT modifying NotificationService.
+Demonstrate OCP by showing the core class never changes.
+19Liskov Substitution
+Demonstrate LSP violation: create a Bird class with fly(), then create Penguin(Bird) that raises NotImplementedError in fly(). Show how this breaks code that expects any Bird to fly. Then fix the hierarchy so LSP is satisfied.
+20Interface Segregation
+Design a smart home system. Create segregated interfaces: Switchable, Dimmable, and Colourable. A BasicBulb implements only Switchable. A SmartBulb implements all three. A Fan implements Switchable and has speed() separately. Show that each device only implements what it needs.
+
+
+M1Inheritance + Abstraction
+INHERITANCE + ABSTRACTION: Design an abstract class Vehicle(ABC) with abstract methods start(), stop(), and fuel_type (abstract property). Create ElectricVehicle and PetrolVehicle as concrete classes. Then create HybridCar(ElectricVehicle, PetrolVehicle) using multiple inheritance. Use super() correctly at each level and print the MRO.
+M2Polymorphism + Encapsulation
+POLYMORPHISM + ENCAPSULATION: Build an Employee hierarchy: Employee ? Manager, Developer, Intern. Each has private   salary and a @property salary.
+Each overrides a method monthly_cost() differently (manager gets bonus, intern gets a cap). Write a function total_payroll(employees) that works polymorphically.
+M3All Four Pillars
+ALL FOUR PILLARS: Design a Media Streaming system. Create an abstract class MediaPlayer(ABC) with abstract methods play(), pause(), stop(). Encapsulate
+  volume with @property and @setter (0-100 validation). Use inheritance: AudioPlayer and VideoPlayer extend MediaPlayer. Demonstrate polymorphism by putting both in a list and calling play() on each.
+M4SOLID: S + O + D
+SOLID - S + O + D: Build an e-commerce order processing system. OrderProcessor should have a single responsibility. Adding a new payment method (Bitcoin) should require zero changes to OrderProcessor (OCP). OrderProcessor should depend on a PaymentGateway abstraction, not a concrete class (DIP). Write complete working code.
+M5Inheritance + Encapsulation + LSP
+INHERITANCE + ENCAPSULATION + SOLID-L: Create a base class Shape with a protected _color and public @property color + @setter. Subclasses Circle, Rectangle, Triangle inherit it. Demonstrate LSP: any function that works on Shape must work with all three without modification. Also verify the setter validates that color is a non-empty string.
+M6Duck Typing + Abstraction + ISP
+DUCK TYPING + ABSTRACTION + SOLID-I: Build a logging system with segregated interfaces: Loggable (log(msg)), Filterable (filter(level)), and Formattable (format(msg)). Create ConsoleLogger(Loggable), FileLogger(Loggable, Filterable), and PrettyLogger(Loggable, Formattable). Write a function process_log(logger, msg) that uses duck typing - it only calls log(msg) and works with any object that has that method.
+M7GRAND CHALLENGE - All Pillars + SOLID
+FULL DESIGN CHALLENGE - ALL CONCEPTS: Design a Hospital Management System with the following constraints: (1) Patient, Doctor, Nurse share common attributes via inheritance from Person. (2) Billing is abstract - CashBilling and InsuranceBilling are concrete. (3) Medical records are fully encapsulated with @property access. (4) Treatment protocols use polymorphism - each specialisation overrides treat(patient). (5) The entire system follows SRP (separate classes per concern) and DIP (high-level classes depend on abstractions). Write at least 8 classes and demonstrate the full system running.
+
+
+
+Complete Reference - OOP Pillars & SOLID
+
+TopicCore Syntax / ToolKey RuleSingle Inheritanceclass Child(Parent):Child gets all parent attrs & methodsMultiple Inheritanceclass C(A, B):Left parent checked first in MROMROClassName.mro() or .  mro	D?B?C?A?object (C3 algorithm)super() - instancesuper().  init  (...)Delegates to next class in MROsuper() - classmethodsuper().class_method(...)Also follows MROMethod Overridingdef method(self): in childChild version replaces parent'sDuck TypingJust call the method - no isinstanceWorks if the method existsProtectedself._attrConvention: internal/subclass use onlyPrivateself.  attrName-mangled to _Class  attr@property@property def attr(self):Access as obj.attr (no parentheses)@setter@attr.setter def attr(self, v):Intercept obj.attr = valueABCclass X(ABC):Cannot be instantiated directly@abstractmethod@abstractmethod def m(self): passSubclass MUST implementSRPOne class, one responsibilitySplit by concernOCPOpen for extension, closed for editUse inheritance/abstractionLSPSubclass replaceable for parentDon't break the parent contractISPNo forced unused methodsMultiple small ABCsDIPDepend on ABC, not concreteInject dependencies
