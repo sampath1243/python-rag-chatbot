@@ -1,10 +1,19 @@
 # Python RAG Chatbot
 
-A Python-based Retrieval-Augmented Generation (RAG) application that answers user questions using information retrieved from a predefined knowledge base.
+A Python-based Retrieval-Augmented Generation (RAG) chatbot that answers user questions using information retrieved from a predefined knowledge base.
 
 ## Project Overview
 
-This project implements a RAG pipeline that combines document processing, text embeddings, semantic search, and Large Language Models (LLMs) to generate context-aware answers.
+This project demonstrates how RAG combines document processing, text embeddings, semantic search, and Large Language Models (LLMs) to generate context-aware answers.
+
+## Technologies Used
+
+- Python
+- OpenAI API
+- OpenAI Embeddings (`text-embedding-3-small`)
+- NumPy
+- Cosine Similarity
+- Git and GitHub
 
 ## Project Structure
 
@@ -12,9 +21,10 @@ This project implements a RAG pipeline that combines document processing, text e
 python_rag_chatbot/
 │
 ├── knowledge/
-│   ├── class_object.txt
-│   ├── OOPs Python.txt
-│   └── Python_Decorators.txt
+│   ├── Iterators&Generators Dunder_methods.txt
+│   ├── OOps Python.txt
+│   ├── Python_Decorators.txt
+│   └── class_object.txt
 │
 ├── rag_core/
 │   ├── __init__.py
@@ -27,11 +37,6 @@ python_rag_chatbot/
 │   └── generator.py
 │
 ├── tests/
-│   ├── __init__.py
-│   ├── test_chunker.py
-│   ├── test_vector_store.py
-│   └── test_retriever.py
-│
 ├── .env.example
 ├── .gitignore
 ├── README.md
@@ -39,26 +44,29 @@ python_rag_chatbot/
 └── run.py
 ```
 
-## Technologies Used
-
-- Python
-- OpenAI API
-- OpenAI Embeddings
-- NumPy
-- Cosine Similarity
-- Retrieval-Augmented Generation (RAG)
-
 ## How It Works
 
 1. Load documents from the knowledge folder.
-2. Split documents into smaller chunks.
+2. Split documents into smaller text chunks.
 3. Generate embeddings for each chunk.
-4. Store chunks and their embeddings in a vector store.
+4. Store chunks and embeddings in an in-memory vector store.
 5. Accept a question from the user.
 6. Generate an embedding for the question.
-7. Retrieve the most relevant chunks using cosine similarity.
-8. Pass the retrieved context to an LLM.
-9. Generate and display the final answer.
+7. Retrieve relevant chunks using cosine similarity.
+8. Pass retrieved context to the LLM.
+9. Generate an answer based on the retrieved information.
+
+## Core Components
+
+| Module | Responsibility |
+|---|---|
+| loader.py | Loads knowledge-base documents |
+| chunker.py | Splits documents into chunks |
+| embeddings.py | Generates text embeddings |
+| vector_store.py | Stores vectors and performs similarity search |
+| retriever.py | Retrieves relevant chunks |
+| generator.py | Generates answers using an LLM |
+| run.py | Runs the chatbot application |
 
 ## Knowledge Base
 
@@ -67,14 +75,16 @@ The current knowledge base contains:
 - Python Classes and Objects
 - Python OOP Concepts
 - Python Decorators
+- Iterators and Generators
+- Python Dunder Methods
 
-## Installation
+## Installation and Setup
 
 ### 1. Clone the repository
 
 ```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
-cd python_rag_chatbot
+git clone https://github.com/sampath1243/python-rag-chatbot.git
+cd python-rag-chatbot
 ```
 
 ### 2. Create a virtual environment
@@ -83,12 +93,12 @@ cd python_rag_chatbot
 python -m venv venv
 ```
 
-### 3. Activate the environment
+### 3. Activate the virtual environment
 
-Windows:
+Windows PowerShell:
 
-```bash
-venv\Scripts\activate
+```powershell
+.\venv\Scripts\Activate.ps1
 ```
 
 ### 4. Install dependencies
@@ -97,9 +107,15 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 5. Configure API key
+### 5. Configure the API key
 
-Set your OpenAI API key as the OPENAI_API_KEY environment variable.
+Create a `.env` file in the project root and add your OpenAI API key:
+
+```env
+OPENAI_API_KEY=your_api_key_here
+```
+
+Never upload your actual `.env` file or API key to GitHub.
 
 ### 6. Run the application
 
@@ -107,20 +123,10 @@ Set your OpenAI API key as the OPENAI_API_KEY environment variable.
 python run.py
 ```
 
-## Core Components
-
-| Module | Responsibility |
-|---|---|
-| loader.py | Document loading |
-| chunker.py | Text chunking |
-| embeddings.py | Embedding generation |
-| vector_store.py | Vector storage and similarity search |
-| retriever.py | Relevant chunk retrieval |
-| generator.py | LLM answer generation |
-| run.py | Application execution |
-
 ## Author
 
-**Sampath Kumar**
+**Sampath Kumar Puttapaka**
 
-Python Developer | Generative AI | RAG
+Python Developer | Generative AI | Retrieval-Augmented Generation (RAG)
+
+GitHub: https://github.com/sampath1243
