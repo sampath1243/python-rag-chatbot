@@ -9,26 +9,15 @@ from rag_core.generator import generate_answer
 
 def main():
 
-    # ==================================================
     # STEP 1: LOAD DOCUMENTS
-    # ==================================================
-
     documents = load_documents()
 
     print(f"Loaded {len(documents)} documents")
 
-
-    # ==================================================
     # STEP 2: CREATE VECTOR STORE
-    # ==================================================
-
     vector_store = VectorStore()
 
-
-    # ==================================================
-    # STEP 3: CHUNK DOCUMENTS + CREATE EMBEDDINGS
-    # ==================================================
-
+    # STEP 3: CHUNK, EMBED AND STORE
     for document in documents:
 
         chunks = chunk_document(
@@ -39,82 +28,77 @@ def main():
 
         for chunk in chunks:
 
-            # Convert chunk text into an embedding vector
             vector = create_embedding(chunk.text)
 
-            # Store chunk and vector
-            vector_store.add(
-                chunk,
-                vector
-            )
-
+            vector_store.add(chunk, vector)
 
     print("\nVector store ready!")
     print("Stored items:", vector_store.count())
 
+    # STEP 4: INITIALIZE CONVERSATION HISTORY
+    conversation_history = []
 
-    # ==================================================
-    # STEP 4: ASK USER A QUESTION
-    # ==================================================
+    print("\nChatbot is ready!")
+    print("Type 'exit' to stop the chatbot.")
 
-    question = input("\nAsk a Python question: ")
+    # STEP 5: CONTINUOUS QUESTION-ANSWER LOOP
+    while True:
 
+        question = input("\nYou: ").strip()
 
-    # ==================================================
-    # STEP 5: RETRIEVE RELEVANT CHUNKS
-    # ==================================================
+        if question.lower() == "exit":
+            print("Chatbot session ended.")
+            break
 
-    results = retrieve(
-        question,
-        vector_store,
-        top_k=3
-    )
+        if not question:
+            print("Please enter a question.")
+            continue
 
+        # STEP 6: RETRIEVE RELEVANT CHUNKS
+        results = retrieve(
+            question,
+            vector_store,
+            top_k=3
+        )
 
-    # ==================================================
-    # STEP 6: DISPLAY RETRIEVED KNOWLEDGE
-    # ==================================================
+        # STEP 7: DISPLAY RETRIEVED KNOWLEDGE
+        print("\n==============================")
+        print("RETRIEVED KNOWLEDGE")
+        print("==============================")
 
-    print("\n==============================")
-    print("RETRIEVED KNOWLEDGE")
-    print("==============================")
+        for index, result in enumerate(results, start=1):
 
+            print(f"\nResult {index}")
+            print(f"Score: {result['score']:.4f}")
+            print(f"Source: {result['chunk'].source}")
+            print(f"Chunk ID: {result['chunk'].chunk_id}")
+            print("\nText:")
+            print(result["chunk"].text[:500])
 
-    for index, result in enumerate(results, start=1):
+        # STEP 8: GENERATE ANSWER USING HISTORY
+        answer = generate_answer(
+            question,
+            results,
+            conversation_history
+        )
 
-        print(f"\nResult {index}")
-        print(f"Score: {result['score']:.4f}")
-        print(f"Source: {result['chunk'].source}")
-        print(f"Chunk ID: {result['chunk'].chunk_id}")
+        # STEP 9: DISPLAY ANSWER
+        print("\n==============================")
+        print("ANSWER")
+        print("==============================")
+        print(answer)
 
-        print("\nText:")
-        print(result["chunk"].text[:500])
+        # STEP 10: SAVE CONVERSATION
+        conversation_history.append({
+            "role": "user",
+            "content": question
+        })
 
+        conversation_history.append({
+            "role": "assistant",
+            "content": answer
+        })
 
-    # ==================================================
-    # STEP 7: GENERATE FINAL ANSWER USING LLM
-    # ==================================================
-
-    answer = generate_answer(
-        question,
-        results
-    )
-
-
-    # ==================================================
-    # STEP 8: DISPLAY FINAL ANSWER
-    # ==================================================
-
-    print("\n==============================")
-    print("FINAL ANSWER")
-    print("==============================")
-
-    print(answer)
-
-
-# ======================================================
-# APPLICATION ENTRY POINT
-# ======================================================
 
 if __name__ == "__main__":
     main()

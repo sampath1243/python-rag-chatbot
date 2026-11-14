@@ -1,4 +1,3 @@
-
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -69,3 +68,35 @@ def test_generate_answer_uses_instructions(mock_client):
 
     assert "provided context" in instructions
     assert "not available" in instructions
+
+
+@patch("rag_core.generator.client")
+def test_generate_answer_includes_conversation_history(mock_client):
+    mock_response = MagicMock()
+    mock_response.output_text = "Django is a Python framework."
+
+    mock_client.responses.create.return_value = mock_response
+
+    conversation_history = [
+        {
+            "role": "user",
+            "content": "What is Python?"
+        },
+        {
+            "role": "assistant",
+            "content": "Python is a programming language."
+        }
+    ]
+
+    generate_answer(
+        "What is Django?",
+        [],
+        conversation_history
+    )
+
+    input_text = mock_client.responses.create.call_args.kwargs["input"]
+
+    assert "Previous Conversation:" in input_text
+    assert "What is Python?" in input_text
+    assert "Python is a programming language." in input_text
+    assert "What is Django?" in input_text

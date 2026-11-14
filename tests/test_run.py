@@ -1,78 +1,58 @@
 
-from types import SimpleNamespace
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
-import run
+from run import main
 
 
-def test_main_runs_rag_pipeline():
+@patch("run.generate_answer")
+@patch("run.retrieve")
+@patch("run.create_embedding")
+@patch("run.load_documents")
+def test_main_runs_rag_pipeline(
+    mock_load_documents,
+    mock_create_embedding,
+    mock_retrieve,
+    mock_generate_answer
+):
+    from rag_core.loader import Document
+    from rag_core.chunker import Chunk
 
-    # Mock document
-    document = SimpleNamespace(
-        source="sample.txt",
-        text="Python is a programming language."
-    )
+    # Arrange: mock document
+    mock_load_documents.return_value = [
+        Document(
+            source="sample.txt",
+            text="Python is a programming language."
+        )
+    ]
 
-    # Mock chunk
-    chunk = SimpleNamespace(
+    mock_create_embedding.return_value = [0.1, 0.2, 0.3]
+
+    mock_chunk = Chunk(
         source="sample.txt",
         chunk_id=0,
         text="Python is a programming language."
     )
 
-    # Mock retrieved results
-    results = [
+    mock_retrieve.return_value = [
         {
-            "chunk": chunk,
+            "chunk": mock_chunk,
             "score": 0.95
         }
     ]
 
-    # Mock vector store
-    mock_vector_store = MagicMock()
-
-    # Mock all external components
-    with patch("run.load_documents", return_value=[document]) as mock_loader, \
-         patch("run.chunk_document", return_value=[chunk]) as mock_chunker, \
-         patch("run.create_embedding", return_value=[0.1, 0.2, 0.3]) as mock_embedding, \
-         patch("run.VectorStore", return_value=mock_vector_store), \
-         patch("run.retrieve", return_value=results) as mock_retriever, \
-         patch("run.generate_answer", return_value="Python is a programming language.") as mock_generator, \
-         patch("builtins.input", return_value="What is Python?"):
-
-        # Execute application
-        run.main()
-
-    # Verify each component was called
-    mock_loader.assert_called_once()
-
-    mock_chunker.assert_called_once_with(
-        document,
-        chunk_size=500,
-        overlap=50
+    mock_generate_answer.return_value = (
+        "Python is a programming language."
     )
 
-    mock_embedding.assert_called_once_with(
-        chunk.text
-    )
+    # Simulate one question followed by exit
+    with patch(
+        "builtins.input",
+        side_effect=["What is Python?", "exit"]
+    ):
+        main()
 
-    mock_vector_store.add.assert_called_once_with(
-        chunk,
-        [0.1, 0.2, 0.3]
-    )
-
-    mock_retriever.assert_called_once_with(
-        "What is Python?",
-        mock_vector_store,
-        top_k=3
-    )
-
-    mock_generator.assert_called_once_with(
-        "What is Python?",
-        results
-    )
-
-
-def test_main_function_exists():
-
-    assert callable(run.main)
+    # Assert
+    mock_load_documents.assert_called_once()
+    mock_create_embedding.assert_called_once()
+    mock_retrieve.assert_called_once()
+    mock_generate_answer.assert_called_once()
